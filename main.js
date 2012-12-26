@@ -7,6 +7,10 @@
             setup: function  (context, config) {
                 var board = new Board(config);
 
+                // public attrs
+                this.context = context;
+                this.board = board;
+
                 // register the event
                 document.addEventListener('keydown', function  () {
 
@@ -18,14 +22,14 @@
                         if (player.keymatch(event.keyCode)) {
 
                             // movement desired position
-                            var intent = player.try(event.keyCode);
+                            var intent_config = player.try(event.keyCode);
 
                             // the new position did not hit anything yet
                             var nohit = true;
 
+                            // player with player hit test
                             // current player number
                             var i = 0;
-
                             while (board.players[i] && nohit) {
 
                                 // get a player
@@ -33,18 +37,19 @@
 
                                 // test if it is not the same players
                                 if (other !== player) {
-
                                     // hit another player?
-                                    if (config_hit(intent, other.config)) {
+                                    if (config_hit(intent_config, other.config)) {
                                         // ok, there was a hit
                                         nohit = false;
                                     }
-
                                 }
 
                                 // next player
                                 i++;
                             }
+
+                            // board hit test
+                            var nohit = nohit && !board_hit(intent_config);
 
                             if (nohit) {
                                 // no conflicts, keep moving
@@ -53,10 +58,6 @@
                         }
                     });
                 });
-
-                // public attrs
-                this.context = context;
-                this.board = board;
             },
 
             draw: function  () {
@@ -115,6 +116,24 @@
                 hit_axis(area_a.y, area_b.y)
                 );
 
+        }
+
+        /*
+         * Test the colision of a player config with the board
+         */
+        function board_hit (intent_config) {
+            var board_area = calculate_area(app.board.config);
+            var intent_area = calculate_area(intent_config);
+
+            return (
+                intent_area.x.i <= board_area.x.i
+                ||
+                intent_area.x.f >= board_area.x.f
+                ||
+                intent_area.y.i <= board_area.y.i
+                ||
+                intent_area.y.f > board_area.y.f
+                );
         }
 
         /*
